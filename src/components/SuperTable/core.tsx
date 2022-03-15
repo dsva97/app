@@ -1,3 +1,4 @@
+import { IOptions } from "./Thead/Th/Filter";
 import {
   IColumnsDefinition,
   IRowsDefinition,
@@ -84,14 +85,21 @@ export class GridTable {
 
   private createCellStateFromCellData(
     columnDefinition: IColumnDefinition,
-    cellData: IValue
+    rowData: IRowData,
+    key: string
   ): ICellState {
     const me = this;
+    const cellData = rowData[key];
+    const lastAlternative = columnDefinition.getValue
+      ? columnDefinition.getValue(rowData)
+      : null;
+    const value = rowData.hasOwnProperty(key) ? cellData : lastAlternative;
+
     const cellStateNPD: ICellStateNoParentData = {
       ...columnDefinition,
-      value: cellData,
+      value,
       values: {
-        value: cellData,
+        value,
       },
       setValue(value: IValue): void | Promise<void> {
         let thisCellState = this as ICellState;
@@ -238,21 +246,36 @@ export class GridTable {
         rowState.data[keyId] === cellState.rowState.data[keyId];
 
       if (isTheCurrentRow) {
-        const stateForRowStateUpdated = rowState.state.map((_cellState) => {
-          let cellUpdated = { ..._cellState };
-          const isTheCurrentCell = _cellState.key === cellState.key;
-          if (isTheCurrentCell) {
-            cellUpdated = { ...cellUpdated };
+        let stateForRowStateUpdated: IRowState["state"] = rowState.state.map(
+          (_cellState) => {
+            let cellUpdated: ICellState = { ..._cellState };
+            const isTheCurrentCell = _cellState.key === cellState.key;
+            if (isTheCurrentCell) {
+              cellUpdated = { ...cellUpdated };
 
-            cellUpdated.value = newValue;
-            cellUpdated.values.value = newValue;
+              cellUpdated.value = newValue;
+              cellUpdated.values.value = newValue;
+            }
+            return cellUpdated;
           }
-          return cellUpdated;
-        });
+        );
         const dataForRowStateUpdated: IRowData = {};
         stateForRowStateUpdated.forEach((cellState) => {
-          dataForRowStateUpdated[cellState.key] = cellState.value;
+          dataForRowStateUpdated[cellState.key] = cellState.getValue
+            ? cellState.getValue(rowState)
+            : cellState.value;
         });
+
+        stateForRowStateUpdated = stateForRowStateUpdated.map(
+          (cellState: ICellState) => {
+            const newCellState = { ...cellState };
+            if (cellState.getValue) {
+              newCellState.value = cellState.getValue(dataForRowStateUpdated);
+              newCellState.values.value = newCellState.value;
+            }
+            return newCellState;
+          }
+        );
 
         const rowStateUpdated = {
           ...rowState,
@@ -265,17 +288,20 @@ export class GridTable {
 
       return { ...rowState };
     }) as IFullState["state"];
+
     const newFullState: IFullState = {
       ...this.fullState!,
       state: newStateforFullState,
-      data: newStateforFullState.map((state) => {
+      data: newStateforFullState.map((rowState) => {
         const rowData: IRowData = {};
-        state.state.forEach((cellState) => {
-          rowData[cellState.key] = cellState.value;
+        rowState.state.forEach((cellState) => {
+          rowData[cellState.key] =
+            cellState.getValue?.(rowState.data) || cellState.value;
         });
         return rowData;
       }),
     };
+
     return newFullState;
   }
 
@@ -293,7 +319,8 @@ export class GridTable {
 
           const cellState = this.createCellStateFromCellData(
             currentColumn,
-            rowData[key]
+            rowData,
+            key
           );
 
           return cellState;
@@ -309,6 +336,7 @@ export class GridTable {
         setValues: (values: IArrayValues) => {},
 
         state: stateForRowState,
+        show: true,
       };
 
       rowState.state.forEach((cellState) => {
@@ -355,6 +383,49 @@ export class GridTable {
 
   public setFullState(fullState: IFullState) {
     this.fullState = fullState;
+  }
+
+  getValuesForFilter(columnDefinition_or_KeyName: IColumnDefinition | string) {
+    const values = this.fullState?.data.map((rowData) => {
+      const key =
+        typeof columnDefinition_or_KeyName === "string"
+          ? columnDefinition_or_KeyName
+          : columnDefinition_or_KeyName.key;
+      const value = rowData[key];
+      return value;
+    });
+    return new Set(values);
+  }
+
+  filter(optionsValues: IOptions, column: IColumnDefinition) {
+    const newStateForFullState: IRowState[] = this.fullState!.state.map(
+      (rowState) => {
+        const newRowState: IRowState = { ...rowState };
+        newRowState.show = !!optionsValues.some((option) => {
+          const cellState = rowState.state.find(
+            (cellState) => cellState.key === column.key
+          );
+          return option.value === cellState!.value && option.checked;
+        });
+        return newRowState;
+      }
+    );
+
+    const newFullState: IFullState = {
+      ...this.fullState!,
+      state: newStateForFullState,
+      data: newStateForFullState.map((state) => {
+        const rowData: IRowData = {};
+        state.state.forEach((cellState) => {
+          rowData[cellState.key] = cellState.value;
+        });
+        return rowData;
+      }),
+    };
+
+    this.fullState = newFullState;
+
+    this.emit(this.coreData);
   }
 }
 

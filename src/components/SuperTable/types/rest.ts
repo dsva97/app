@@ -41,6 +41,8 @@ export interface IRowState {
   setValues: (values: IArrayValues) => Promise<void> | void;
 
   state: ICellState[];
+
+  show?: boolean;
 }
 
 // export interface IRowsState {

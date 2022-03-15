@@ -19,6 +19,16 @@ const _data: IRowData[] = [
     name: "Amy",
     age: "40",
   },
+  {
+    id: 4,
+    name: "Faron",
+    age: "30",
+  },
+  {
+    id: 5,
+    name: "Shady",
+    age: "30",
+  },
 ];
 
 const definitions: IDefinitions = {
@@ -105,13 +115,11 @@ const definitions: IDefinitions = {
       columnEvents: {},
 
       events: {},
-
-      render: ({ rowState: { data } }) => {
-        return (
-          <strong>
-            {data.name} - {data.age}
-          </strong>
-        );
+      getValue: (rowData) => {
+        return `${rowData.name} - ${rowData.age}`;
+      },
+      render: ({ value }) => {
+        return <strong>{value}</strong>;
       },
 
       width: "20%",
@@ -128,15 +136,34 @@ export const TestSuperTable = () => {
   });
   const [discount, setDiscount] = useState(0);
   const applyDiscount = () => {
-    state?.state.forEach((rowState) => {
-      const cellAge = rowState.state.find(
-        (cellState) => cellState.key === "age"
-      );
-      if (cellAge) {
-        cellAge.setValue(Number(cellAge.value) - discount);
-      }
-    });
+    state?.state
+      .filter((rowState) => rowState.show)
+      .forEach((rowState) => {
+        const cellAge = rowState.state.find(
+          (cellState) => cellState.key === "age"
+        );
+        if (cellAge) {
+          cellAge.setValue(Number(cellAge.value) - discount);
+        }
+      });
   };
+
+  const forTextArea = JSON.stringify(
+    gridTable.fullState!.state.map((rowState) => {
+      if (rowState.show) {
+        const data: IRowData = {};
+
+        rowState.state.forEach((cellState) => {
+          data[cellState.key] = cellState.value;
+        });
+        return data;
+      }
+      return rowState.data;
+    }),
+    null,
+    3
+  );
+
   return (
     <div>
       <div>
@@ -147,7 +174,12 @@ export const TestSuperTable = () => {
         />
         <button onClick={applyDiscount}>Apply discount</button>
       </div>
-      <SuperTable state={state!} columnsDefinition={columnsDefinition} />
+      <SuperTable
+        state={state!}
+        gridTable={gridTable}
+        columnsDefinition={columnsDefinition}
+      />
+      <textarea value={forTextArea} disabled></textarea>
     </div>
   );
 };

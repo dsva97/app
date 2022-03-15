@@ -1,4 +1,4 @@
-import { Key } from "./data";
+import { IRowData, Key } from "./data";
 import { ICellParams } from "./rest";
 
 export interface IRowsDefinition {
@@ -18,6 +18,7 @@ export interface IEmptyColumnDefinition {
     [key: Key]: any;
   };
   setValues?: (values: { [key: Key]: any }) => Promise<void> | void;
+  getValue?: (rowData: IRowData) => any;
 }
 //#endregion For body cells without data only format
 

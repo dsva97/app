@@ -1,0 +1,24 @@
+.table {
+  --color-gray: #333;
+  --color-light-gray: #ccc;
+  --border-style: 0.5px solid var(--color-light-gray);
+
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--color-gray);
+  display: flex;
+  flex-direction: column;
+  border-top: var(--border-style);
+  border-bottom: var(--border-style);
+}
+.table * {
+  display: flex;
+  width: 100%;
+}
+
+.table th,
+.table td {
+  padding: 0.15rem 0.5rem;
+  border-top: var(--border-style);
+  border-bottom: var(--border-style);
+  border-collapse: collapse;
+}
