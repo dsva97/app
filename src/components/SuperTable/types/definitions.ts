@@ -30,6 +30,7 @@ export interface IColumnDefinition extends IEmptyColumnDefinition {
   filter: true;
   sort: true;
   show: true;
+  sorted: boolean;
 
   columnEvents: {};
 

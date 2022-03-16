@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { GridTable } from "../../core";
 import { Filter, IOption, IOptions } from "./Filter";
 import { ICellState, IColumnDefinition } from "../../types";
+import { ColumnsState, ColumnState, Options } from "..";
 
 export interface IThProps {
   state: GridTable["fullState"];
@@ -9,6 +10,7 @@ export interface IThProps {
   applyOptions: (optionsValues: IOption[]) => void;
   showFilter: () => void;
   isShowFilter: boolean;
+  goSorter: () => void;
 }
 export const Th = ({
   state,
@@ -16,6 +18,7 @@ export const Th = ({
   applyOptions,
   showFilter,
   isShowFilter,
+  goSorter,
 }: IThProps) => {
   const valueCellsOfColumn = useMemo(() => {
     return state?.state
@@ -47,7 +50,7 @@ export const Th = ({
       const newOpt = {
         value: opt.value,
         label: opt.label,
-        checked: options[index].checked,
+        checked: options[index]?.checked || false,
       };
       return newOpt;
     });
@@ -91,7 +94,9 @@ export const Th = ({
             alignItems: "center",
           }}
         >
-          {column.sort ? <span>🔻</span> : null}
+          {column.sort ? (
+            <span onClick={goSorter}>{column.sorted ? "🔺" : "🔻"}</span>
+          ) : null}
           {column.filter ? <span onClick={onClick}>🝖</span> : null}
         </div>
       </div>

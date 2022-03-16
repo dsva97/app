@@ -4,13 +4,15 @@ import { ICellState, Key } from "../types";
 import { Th } from "./Th";
 import { IOption, IOptions } from "./Th/Filter";
 
-type ColumnState = ICellState[];
-type ColumnsState = { [key: Key]: ColumnState };
-type AllOptions = {
-  [key: Key]: {
-    show: boolean;
-    options: IOptions;
-  };
+export type ColumnState = ICellState[];
+export type ColumnsState = { [key: Key]: ColumnState };
+export type Options = {
+  show: boolean;
+  sorted: boolean;
+  options: IOptions;
+};
+export type AllOptions = {
+  [key: Key]: Options;
 };
 
 export const Thead = ({ gridTable }: { gridTable: GridTable }) => {
@@ -41,6 +43,7 @@ export const Thead = ({ gridTable }: { gridTable: GridTable }) => {
       });
       newFilters[key] = {
         options,
+        sorted: false,
         show: false,
       };
     });
@@ -63,6 +66,7 @@ export const Thead = ({ gridTable }: { gridTable: GridTable }) => {
       Object.keys(columnsStates).forEach((key) => {
         newFilters[key] = {
           options: filters[key].options,
+          sorted: !!filters[key].sorted,
           show: false,
         };
       });
@@ -94,18 +98,29 @@ export const Thead = ({ gridTable }: { gridTable: GridTable }) => {
         setFilters(newFilters);
       };
 
+      const goSorter = () => {
+        const newFilters: AllOptions = {};
+
+        Object.keys(filters).map((key) => {
+          const filter = filters[key];
+          const newFilter = { ...filter };
+          if (column.key === key) {
+            const newSorted = !newFilter.sorted;
+            newFilter.sorted = newSorted;
+          } else {
+            newFilter.sorted = false;
+          }
+          newFilters[key] = newFilter;
+        });
+
+        gridTable.sorter(column);
+
+        setFilters(newFilters);
+      };
+
       const isShowFilter = filters[column.key].show;
 
-      return (
-        <Th
-          isShowFilter={isShowFilter}
-          showFilter={showFilter}
-          key={column.key}
-          applyOptions={applyOptions}
-          state={gridTable.fullState}
-          column={column}
-        />
-      );
+      return { showFilter, goSorter, isShowFilter, applyOptions, column };
     });
     return dataForRrender;
   }, [filters]);
@@ -113,7 +128,21 @@ export const Thead = ({ gridTable }: { gridTable: GridTable }) => {
   return (
     <thead style={{ display: "flex", justifyContent: "stretch" }}>
       <tr style={{ width: "100%", display: "flex", justifyContent: "stretch" }}>
-        {dataForRender}
+        {dataForRender.map(
+          ({ column, isShowFilter, applyOptions, goSorter, showFilter }) => {
+            return (
+              <Th
+                isShowFilter={isShowFilter}
+                showFilter={showFilter}
+                key={column.key}
+                applyOptions={applyOptions}
+                state={gridTable.fullState}
+                goSorter={goSorter}
+                column={column}
+              />
+            );
+          }
+        )}
       </tr>
     </thead>
   );

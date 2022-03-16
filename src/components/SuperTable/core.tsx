@@ -427,6 +427,49 @@ export class GridTable {
 
     this.emit(this.coreData);
   }
+
+  sorter(column: IColumnDefinition) {
+    const sorted = !column.sorted;
+
+    this.columnsDefinition.forEach((columnDefinition) => {
+      columnDefinition.sorted = false;
+    });
+    column.sorted = sorted;
+
+    const newStateForFullState: IRowState[] = this.fullState?.state.sort(
+      (a: IRowState, b: IRowState) => {
+        const aCell = a.state.find(
+          (cellState) => cellState.key === column.key
+        ) as ICellState;
+        const aValue = aCell.value;
+
+        const bCell = b.state.find(
+          (cellState) => cellState.key === column.key
+        ) as ICellState;
+        const bValue = bCell.value;
+
+        const result = aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+
+        return sorted ? result : -result;
+      }
+    ) as IRowState[];
+
+    const newFullState: IFullState = {
+      ...this.fullState!,
+      state: newStateForFullState,
+      data: newStateForFullState.map((state) => {
+        const rowData: IRowData = {};
+        state.state.forEach((cellState) => {
+          rowData[cellState.key] = cellState.value;
+        });
+        return rowData;
+      }),
+    };
+
+    this.fullState = newFullState;
+
+    this.emit(this.coreData);
+  }
 }
 
 type ICallbackSubscriber = (state: ICoreData) => Promise<void> | void;
