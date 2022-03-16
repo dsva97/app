@@ -173,8 +173,6 @@ export const TestSuperTable = () => {
     XLSX.writeFile(workbook, filename);
   };
 
-  console.log(gridTable);
-
   return (
     <div>
       <div>

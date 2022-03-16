@@ -84,7 +84,11 @@ export const Th = ({
           width: "100%",
         }}
       >
-        <div>{column.label}</div>
+        {column.cellHeadRender ? (
+          column.cellHeadRender()
+        ) : (
+          <span>{column.label}</span>
+        )}
         <div
           style={{
             width: "auto",
