@@ -101,17 +101,43 @@ export class GridTable {
       values: {
         value,
       },
+      // get setValue() {
+      //   return function (newValue: IValue) {
+      //     const newValues = {
+      //       ...me.coreData.fullState.values,
+      //       [key]: newValue,
+      //     };
+      //     const newData = {
+      //       ...me.coreData.fullState.data,
+      //       [key]: newValue,
+      //     };
+      //     me.fullState = {
+      //       ...me.coreData.fullState,
+      //       data: newData,
+      //       values: newValues,
+      //     };
+      //     console.log(me.coreData);
+      //     me.emit(me.coreData);
+      //   };
+      // },
       setValue(value: IValue): void | Promise<void> {
-        let thisCellState = this as ICellState;
+        let thisCellState = cellState as ICellState;
+
         thisCellState = { ...thisCellState, ...cellStateNPD };
+
         const newFullState = me.setValueFromCell(thisCellState, value);
 
         me.fullState = newFullState;
         me.emit(me.coreData);
       },
       setValues(values: IValues): void | Promise<void> {
-        const thisCellState = this as ICellState;
+        let thisCellState = this as ICellState;
+        console.log("thisCellState", thisCellState);
+        thisCellState = { ...thisCellState, ...cellStateNPD };
         const newFullState = me.setValuesFromCell(thisCellState, values);
+
+        me.fullState = newFullState;
+        me.emit(me.coreData);
       },
     };
     const cellState = this.createCellStateFromStateNPD(cellStateNPD);
@@ -243,7 +269,7 @@ export class GridTable {
     const newStateforFullState = this.fullState?.state.map((rowState) => {
       const keyId = this.rowsDefinition.idKey;
       const isTheCurrentRow =
-        rowState.data[keyId] === cellState.rowState.data[keyId];
+        rowState?.data[keyId] === cellState?.rowState?.data[keyId];
 
       if (isTheCurrentRow) {
         let stateForRowStateUpdated: IRowState["state"] = rowState.state.map(

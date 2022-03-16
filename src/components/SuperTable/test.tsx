@@ -1,6 +1,6 @@
 import { SuperTable } from ".";
 import { useGridTable } from "./useGridTable";
-import { ICellState, IDefinitions, IRowData } from "./types";
+import { ICellParams, ICellState, IDefinitions, IRowData } from "./types";
 import { useState } from "react";
 import * as XLSX from "xlsx";
 
@@ -78,15 +78,9 @@ const definitions: IDefinitions = {
       columnEvents: {},
 
       events: {},
-      render: (params) => {
-        return (
-          <input
-            value={params.value}
-            onChange={(e) => params.setValue(e.target.value)}
-          />
-        );
-      },
-
+      render: ({ value, setValue }: ICellParams) => (
+        <input value={value} onChange={(e) => setValue(e.target.value)} />
+      ),
       width: "20%",
       cellHeadEvents: {},
       cellHeadRender: () => <span>{"¡ NAME !"}</span>,
@@ -178,6 +172,8 @@ export const TestSuperTable = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
     XLSX.writeFile(workbook, filename);
   };
+
+  console.log(gridTable);
 
   return (
     <div>
