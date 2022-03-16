@@ -2,6 +2,7 @@ import { SuperTable } from ".";
 import { useGridTable } from "./useGridTable";
 import { ICellState, IDefinitions, IRowData } from "./types";
 import { useState } from "react";
+import * as XLSX from "xlsx";
 
 const _data: IRowData[] = [
   {
@@ -54,7 +55,7 @@ const definitions: IDefinitions = {
       filter: true,
       sort: true,
       show: true,
-
+      sorted: false,
       columnEvents: {},
 
       events: {},
@@ -68,6 +69,8 @@ const definitions: IDefinitions = {
       key: "name",
       order: 1,
       label: "NAME",
+      sorted: false,
+
       filter: true,
       sort: true,
       show: true,
@@ -92,6 +95,8 @@ const definitions: IDefinitions = {
       key: "age",
       order: 2,
       label: "AGE",
+      sorted: false,
+
       filter: true,
       sort: true,
       show: true,
@@ -113,6 +118,7 @@ const definitions: IDefinitions = {
       sort: true,
       show: true,
       columnEvents: {},
+      sorted: false,
 
       events: {},
       getValue: (rowData) => {
@@ -164,6 +170,15 @@ export const TestSuperTable = () => {
     3
   );
 
+  const download = () => {
+    const filename = "users.xlsx";
+    const rows = JSON.parse(forTextArea);
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+    XLSX.writeFile(workbook, filename);
+  };
+
   return (
     <div>
       <div>
@@ -179,6 +194,7 @@ export const TestSuperTable = () => {
         gridTable={gridTable}
         columnsDefinition={columnsDefinition}
       />
+      <button onClick={download}>Download</button>
       <textarea value={forTextArea} disabled></textarea>
     </div>
   );
